@@ -1,41 +1,11 @@
-from flask import Flask, request, jsonify, make_response   
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-import uuid 
-import jwt
-import datetime
-from functools import wraps
-
-app = Flask(__name__) 
-
-app.config['SECRET_KEY']='Th1s1ss3cr3t'
-app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///C:/python-projects/library-rest-api/library.db' 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True 
-
-db = SQLAlchemy(app)   
-
-class Users(db.Model):  
-    id = db.Column(db.Integer, primary_key=True)
-    public_id = db.Column(db.Integer)  
-    name = db.Column(db.String(50))
-    password = db.Column(db.String(50))
-    admin = db.Column(db.Boolean)
-
-class Authors(db.Model):  
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)   
-    book = db.Column(db.String(20), unique=True, nullable=False) 
-    country = db.Column(db.String(50), nullable=False)  
-    booker_prize = db.Column(db.Boolean) 
-    user_id = db.Column(db.Integer)
-
+from flask import request, jsonify, make_response
+from setting import *
+from userModel import *
 
 def token_required(f):  
     @wraps(f)  
     def decorator(*args, **kwargs):
-
         token = None 
-
         if 'x-access-tokens' in request.headers:  
             token = request.headers['x-access-tokens'] 
 
@@ -52,103 +22,73 @@ def token_required(f):
     return decorator 
 
 
-        
+@app.route('/register', methods=['POST'])
+def post_signup_user():  
+    data = request.get_json()
+    Users.signup_user(data["name"], data["password"])
 
-@app.route('/register', methods=['GET', 'POST'])
-def signup_user():  
-    data = request.get_json()  
+    return jsonify({'message': 'registered successfully'})
 
-    hashed_password = generate_password_hash(data['password'], method='sha256')
+
+@app.route("/login", methods=["POST"])
+def login_user():
+    auth = request.authorization
+
+    if not auth or not auth.username or not auth.password:
+        return make_response('could not verify', 401, {'WWW.Authentication': 'Basic realm: "login required"'})
     
-    new_user = Users(public_id=str(uuid.uuid4()), name=data['name'], password=hashed_password, admin=False) 
-    db.session.add(new_user)  
-    db.session.commit()    
+    user = Users.query.filter_by(name=auth.username).first()
 
-    return jsonify({'message': 'registered successfully'})   
-
-
-@app.route('/login', methods=['GET', 'POST'])  
-def login_user(): 
+    if check_password_hash(user.password, auth.password):
+        token = jwt.encode({"public_id": user.public_id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config["SECRET_KEY"])
+        return jsonify({"token": token.decode("UTF-8")})
     
-    auth = request.authorization   
-
-    if not auth or not auth.username or not auth.password:  
-        return make_response('could not verify', 401, {'WWW.Authentication': 'Basic realm: "login required"'})    
-
-    user = Users.query.filter_by(name=auth.username).first()   
-        
-    if check_password_hash(user.password, auth.password):  
-        token = jwt.encode({'public_id': user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config['SECRET_KEY'])  
-        return jsonify({'token' : token.decode('UTF-8')}) 
-
-    return make_response('could not verify',  401, {'WWW.Authentication': 'Basic realm: "login required"'})
+    return make_response("Couldnt verify", 401)
 
 
 @app.route('/user', methods=['GET'])
-def get_all_users():  
-    
-    users = Users.query.all() 
+@token_required
+def get_all_users(current_user):
+    return jsonify({"user": Users.get_all_user()})
 
-    result = []   
+@app.route('/user/<id>', methods=['DELETE'])
+@token_required
+def delete_user(current_user, id):
+    id = current_user.id
+    Users.delete_user(id)
 
-    for user in users:   
-        user_data = {}   
-        user_data['public_id'] = user.public_id  
-        user_data['name'] = user.name 
-        user_data['password'] = user.password
-        user_data['admin'] = user.admin 
-        
-        result.append(user_data)   
-
-    return jsonify({'users': result})  
+    return jsonify({'message': 'User deleted'})
 
 
-@app.route('/authors', methods=['GET']) 
-@token_required 
-def get_authors(current_user):  
-
-    authors = Authors.query.all()   
-
-    output = []  
-
-    for author in authors:   
-        author_data = {}  
-        author_data['name'] = author.name 
-        author_data['book'] = author.book 
-        author_data['country'] = author.country  
-        author_data['booker_prize'] = author.booker_prize
-        output.append(author_data)  
-
-    return jsonify({'list_of_authors' : output})
+# Author
+@app.route('/authors', methods=['GET'])
+@token_required
+def get_authors(current_user):
+    return jsonify({"author": Authors.get_author()})
 
 
-    
 @app.route('/authors', methods=['POST'])
 @token_required
-def create_author(current_user):
-    
-    request_data = request.get_json() 
+def add_author(current_user):
+    data = request.get_json()
+    Authors.add_author(
+        data["name"],
+        data["book"],
+        data["country"],
+        True,
+        current_user.id
 
-    new_authors = Authors(name=request_data['name'], country=request_data['country'], book=request_data['book'], booker_prize=True, user_id=current_user.id)  
-    db.session.add(new_authors)   
-    db.session.commit()   
-
-    return jsonify({'message' : 'new author created'})
-        
+    )
     
+    return jsonify({'message': 'add author successfully'}) 
 
 
 @app.route('/authors/<name>', methods=['DELETE'])
 @token_required
-def delete_author(current_user, name):  
-    author = Authors.query.filter_by(name=name, user_id=current_user.id).first()   
-    if not author:   
-        return jsonify({'message': 'author does not exist'})   
-
-
-    db.session.delete(author)  
-    db.session.commit()   
-
+def delete_author(current_user, name):
+    user_id = current_user.id
+    Authors.delete_author(user_id, name)
+    
     return jsonify({'message': 'Author deleted'})
 
 
