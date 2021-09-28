@@ -5,7 +5,7 @@ from werkzeug.security import check_password_hash
 import datetime
 import jwt
 from setting import *
-from controller import user_controller, detail_user_controller
+from controller import user_controller
 from model.user import *
 from model.detail_user import *
 
@@ -35,15 +35,17 @@ def user():
     if request.method == 'GET':
         return jsonify({"user": user_controller.get_all_user()})
     else:
-        return user_controller.add_user()
+        return user_controller.create()
 
 
-@app.route("/user/<id>", methods=["POST", "GET"])
+@app.route("/user/<id>", methods=["PUT", "GET", "DELETE"])
 def user_detail(id):
     if request.method == 'GET':
         return jsonify({"detail_user": user_controller.get_single_user(id)})
-    else:
-        return detail_user_controller.add_detail_user(id)
+    elif request.method == 'PUT':
+        return user_controller.update(id)
+    elif request.method == 'DELETE':
+        return user_controller.delete(id)
 
 
 # @app.route("/register", methods=["POST"])
