@@ -41,7 +41,7 @@ def user():
 @app.route("/user/<id>", methods=["PUT", "GET", "DELETE"])
 def user_detail(id):
     if request.method == 'GET':
-        return jsonify({"detail_user": user_controller.get_single_user(id)})
+        return user_controller.get_single_user(id)
     elif request.method == 'PUT':
         return user_controller.update(id)
     elif request.method == 'DELETE':

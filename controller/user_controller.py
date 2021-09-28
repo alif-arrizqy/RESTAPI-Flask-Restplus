@@ -9,51 +9,63 @@ def create():
     """
         create user and detail user
     """
-    # user
-    _username = request.json["username"]
-    _password = request.json["password"]
-    _name = request.json["name"]
-    _status = request.json["status"]
-    
-    hashed_password = generate_password_hash(password=_password, method="sha256")
-    new_user = Users(
-        username=_username,
-        password=hashed_password,
-        name=_name,
-        status=_status,
-    )
-    db.session.add(new_user)
+    try:
+        # user
+        _username = request.json["username"]
+        _password = request.json["password"]
+        _name = request.json["name"]
+        _status = request.json["status"]
+        
+        hashed_password = generate_password_hash(password=_password, method="sha256")
+        new_user = Users(
+            username=_username,
+            password=hashed_password,
+            name=_name,
+            status=_status,
+        )
+        db.session.add(new_user)
 
-    # detail user
-    _address = request.json["address"]
-    _phone_number = request.json["phone_number"]
-    _email = request.json["email"]
+        # detail user
+        _address = request.json["address"]
+        _phone_number = request.json["phone_number"]
+        _email = request.json["email"]
 
-    detail_user = DetailUsers(
-        address=_address,
-        phone_number=_phone_number,
-        email=_email,
-        users=new_user #user_id
-    )
-    db.session.add(detail_user)
-    db.session.commit()
-    return jsonify({"message": "registered successfully!"})
+        detail_user = DetailUsers(
+            address=_address,
+            phone_number=_phone_number,
+            email=_email,
+            users=new_user #user_id
+        )
+        db.session.add(detail_user)
+        db.session.commit()
+        return jsonify({"message": "registered successfully!"})
+    except Exception as e:
+        print(e)
 
 
 def get_all_user():
     """
         Return all user
     """
-    return [Users.json(user) for user in Users.query.all()]
+    try:
+        return [Users.json(user) for user in Users.query.all()]
+    except Exception as e:
+        print(e)
 
 
 def get_single_user(_id):
     """
         Return a single user
     """
-    data = Users.query.filter_by(id=_id).first()
-    get_data = singleTransform(data)
-    return get_data
+    try:
+        data = Users.query.filter_by(id=_id).first()
+        if not data:
+            return jsonify({"message": "ID is not found"}), 404
+
+        get_data = singleTransform(data)
+        return jsonify([{"user": get_data}])
+    except Exception as e:
+        print(e)
 
 def singleTransform(values):
     """
@@ -65,27 +77,51 @@ def singleTransform(values):
         'name': values.name,
         'status': values.status,
         # 'created_on': values.created_on,
-        'detail': detail_user_controller.singleTransform(values.get_detail)
+        'detail_user': singleTransformDetailUser(values.get_detail)
+    }
+    return data
+
+def singleTransformDetailUser(details):
+    data = {
+        'address': details.address,
+        'phone_number': details.phone_number,
+        'email': details.email,
     }
     return data
 
 def update(_id):
-    _name = request.json["name"]
-    users = Users.query.filter_by(id=_id).first()
-    users.name=_name
+    """
+        Update name from Users
+        Update address, phone_number, email from DetailUsers
+    """
+    try:
+        _name = request.json["name"]
+        users = Users.query.filter_by(id=_id).first()
+        users.name=_name
 
-    _address = request.json["address"]
-    _phone_number = request.json["phone_number"]
-    _email = request.json["email"]
-    details = DetailUsers.query.filter_by(user_id=_id).first()
-    details.address=_address
-    details.phone_number=_phone_number
-    details.email=_email
-    db.session.commit()
-    return jsonify({"message": "Successfully update data!"})
+        _address = request.json["address"]
+        _phone_number = request.json["phone_number"]
+        _email = request.json["email"]
+        details = DetailUsers.query.filter_by(user_id=_id).first()
+        details.address=_address
+        details.phone_number=_phone_number
+        details.email=_email
+        db.session.commit()
+        return jsonify({"message": "Successfully update data!"})
+    except Exception as e:
+        print(e)
 
 def delete(_id):
-    Users.query.filter_by(id=_id).delete()
-    DetailUsers.query.filter_by(user_id=_id).delete()
-    db.session.commit()
-    return jsonify({"message": "Successfully delete data!"})
+    """
+        Deleted data Users and DetailUsers
+    """
+    try:
+        users = Users.query.filter_by(id=_id).delete()
+        details = DetailUsers.query.filter_by(user_id=_id).delete()
+        if not users and not details:
+            return jsonify({"message": "ID is not found"}), 404
+        
+        db.session.commit()
+        return jsonify({"message": "Successfully delete data!"})
+    except Exception as e:
+        print(e)
