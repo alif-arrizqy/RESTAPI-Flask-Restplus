@@ -2,7 +2,6 @@ from flask import jsonify, request
 import json
 from werkzeug.security import generate_password_hash
 from model.user import *
-from controller import detail_user_controller
 
 
 def create():

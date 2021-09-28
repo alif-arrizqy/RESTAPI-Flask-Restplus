@@ -12,13 +12,12 @@ class Users(db.Model):
     password = db.Column(db.String(50))
     name = db.Column(db.String(50))
     status = db.Column(db.Integer)
-    # created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     get_detail = db.relationship('DetailUsers', backref='users', uselist=False)
 
     def json(self):
         return {
             "id": self.id,
-            "public_id": self.public_id,
             "username": self.username,
             "name": self.name,
             "status": self.status,
@@ -29,7 +28,6 @@ class Users(db.Model):
     def __repr__(self):
         user_object = {
             "id": self.id,
-            "public_id": self.public_id,
             "username": self.username,
             "name": self.name,
             "status": self.status,
@@ -44,8 +42,8 @@ class DetailUsers(db.Model):
     phone_number = db.Column(db.String(15))
     email = db.Column(db.String(50), unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    # created_on = db.Column(db.DateTime(), default=datetime.utcnow)
-    # updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
     # get_user = db.relationship("Users", backref="user_id")
 
     def json(self):

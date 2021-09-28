@@ -1,4 +1,5 @@
 import json
+from os import stat
 from flask import request, jsonify, make_response
 from functools import wraps
 from werkzeug.security import check_password_hash
@@ -6,8 +7,7 @@ import datetime
 import jwt
 from setting import *
 from controller import user_controller
-from model.user import *
-from model.detail_user import *
+from model.user import Users
 
 
 def token_required(f):
@@ -22,7 +22,7 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, app.config["SECRET_KEY"])
-            current_user = Users.query.filter_by(public_id=data["public_id"]).first()
+            current_user = Users.query.filter_by(id=data["id"]).first()
         except:
             return jsonify({"message": "token is invalid"}), 401
 
@@ -30,29 +30,24 @@ def token_required(f):
 
     return decorator
 
+
 @app.route("/user", methods=["POST", "GET"])
 def user():
-    if request.method == 'GET':
+    if request.method == "GET":
         return jsonify({"user": user_controller.get_all_user()})
     else:
         return user_controller.create()
 
 
 @app.route("/user/<id>", methods=["PUT", "GET", "DELETE"])
-def user_detail(id):
-    if request.method == 'GET':
+@token_required
+def user_detail(current_user, id):
+    if request.method == "GET":
         return user_controller.get_single_user(id)
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         return user_controller.update(id)
-    elif request.method == 'DELETE':
+    elif request.method == "DELETE":
         return user_controller.delete(id)
-
-
-# @app.route("/register", methods=["POST"])
-# def signup_user():
-#     data = request.get_json()
-#     add_user(data["username"], data["password"], data["name"], data["status"])
-#     return jsonify({"message": "registered successfully"})
 
 
 @app.route("/login", methods=["POST"])
@@ -71,15 +66,20 @@ def login_user():
         if check_password_hash(user.password, auth.password):
             token = jwt.encode(
                 {
-                    "public_id": user.public_id,
-                    "exp": datetime.datetime.now() + datetime.timedelta(minutes=30),
+                    "id": user.id,
+                    "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=30),
                 },
                 app.config["SECRET_KEY"],
             )
-            return jsonify({"token": token.decode("UTF-8")})
+            if user.status == 1:
+                status = "admin"
+            else:
+                status = "user"
+            return jsonify({"token": token.decode("UTF-8"), "status_login": status})
     else:
         return jsonify({"message": "login as user"})
     return make_response("Couldnt verify", 401)
+
 
 # # User
 # @app.route("/user", methods=["GET"])
@@ -165,5 +165,5 @@ def login_user():
 #     db.create_all()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
