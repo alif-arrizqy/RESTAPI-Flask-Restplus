@@ -51,6 +51,8 @@ class DetailUsers(db.Model):
             "address": self.address,
             "phone_number": self.phone_number,
             "email": self.email,
+            "created_on": self.created_on,
+            "updated_on": self.updated_on,
         }
 
 
@@ -59,6 +61,8 @@ class DetailUsers(db.Model):
             "address": self.address,
             "phone_number": self.phone_number,
             "email": self.email,
+            "created_on": self.created_on,
+            "updated_on": self.updated_on,
         }
         return json.dumps(detail_object)
     

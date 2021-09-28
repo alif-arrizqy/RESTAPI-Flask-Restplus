@@ -85,6 +85,8 @@ def singleTransformDetailUser(details):
         'address': details.address,
         'phone_number': details.phone_number,
         'email': details.email,
+        'created_on': details.created_on,
+        'updated_on': details.updated_on,
     }
     return data
 

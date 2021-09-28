@@ -81,39 +81,6 @@ def login_user():
     return make_response("Couldnt verify", 401)
 
 
-# # User
-# @app.route("/user", methods=["GET"])
-# # @token_required
-# def get_all_users():
-#     return jsonify({"user": Users.get_all_user()})
-
-
-# @app.route("/detail_user/<id>", methods=["POST"])
-# @token_required
-# def add_detail_user(current_user, id):
-#     data = request.get_json()
-#     success = DetailUsers.add_detail_user(
-#         current_user.id, data["address"], data["phone_number"], data["email"]
-#     )
-#     return success if success else jsonify({"message": "Failed to added Detail User"})
-
-
-# @app.route("/detail_user/<user_id>", methods=["GET"])
-# @token_required
-# def detail_user(current_user, user_id):
-#     user_id = current_user.id
-#     match = DetailUsers.get_detail_user(user_id)
-#     return match if match else jsonify({"message": "Data User not Found 404"}, 404)
-
-
-# @app.route("/user/<id>", methods=["DELETE"])
-# @token_required
-# def delete_user(current_user, id):
-#     id = current_user.id
-#     Users.delete_user(id)
-#     return jsonify({"message": "User deleted"})
-
-
 # Author
 # @app.route("/authors", methods=["GET"])
 # @token_required
