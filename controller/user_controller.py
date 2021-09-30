@@ -76,15 +76,11 @@ def singleTransform(values):
         "username": values.username,
         "name": values.name,
         "status": values.status,
-        "detail_user": singleTransformDetailUser(values.get_detail)
+        "detail_user": singleTransformDetailUser(values.get_detail),
     }
     author = []
     for i in values.get_author:
-        author.append(
-            {
-                "name_author": i.author_name,
-            }
-        )
+        author.append({"name_author": i.author_name})
     data["author_created"] = author
     return data
 
