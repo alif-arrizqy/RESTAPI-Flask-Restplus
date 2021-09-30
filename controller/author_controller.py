@@ -9,16 +9,12 @@ def create(_id):
     data = Users.query.filter_by(id=_id).first()
     if not data:
         return jsonify({"message": "ID is not found"}), 401
-    
+
     _author_name = request.json["author_name"]
     _email = request.json["email"]
     _user_id = data.id
 
-    new_author = Author(
-        author_name=_author_name,
-        email=_email,
-        user_id=_user_id
-    )
+    new_author = Author(author_name=_author_name, email=_email, user_id=_user_id)
     db.session.add(new_author)
     db.session.commit()
     return jsonify({"message": "author successfully added"})
@@ -51,13 +47,32 @@ def singleTransform(values):
         "id": values.id,
         "name_author": values.author_name,
         "email": values.email,
-        "created_by": createdBy(values.users)
+        "created_by": createdBy(values.users),
     }
     return data
 
 
 def createdBy(datas):
-    data = {
-        "name": datas.name
-    }
+    data = {"name": datas.name}
     return data
+
+
+def update(_id):
+    _author_name = request.json["author_name"]
+    _email = request.json["email"]
+    author = Author.query.filter_by(id=_id).first()
+    author.author_name=_author_name
+    author.email=_email
+    db.session.commit()
+    return jsonify({"message": "Successfully update author data!"})
+
+
+def delete(_id):
+    author = Author.query.filter_by(id=_id).delete()
+    if not author:
+        return jsonify({"message": "ID is not found"}), 401
+    
+    db.session.commit()
+    return jsonify({"message": "Successfully delete author data!"})
+
+
