@@ -1,3 +1,4 @@
+from enum import auto
 import json
 from os import stat
 from flask import request, jsonify, make_response
@@ -6,8 +7,8 @@ from werkzeug.security import check_password_hash
 import datetime
 import jwt
 from setting import *
-from controller import user_controller
-from model.user import Users
+from controller import user_controller, author_controller
+from model.models import Users
 
 
 def token_required(f):
@@ -78,27 +79,23 @@ def login_user():
             return jsonify({"token": token.decode("UTF-8"), "status_login": status})
     else:
         return jsonify({"message": "login as user"})
-    return make_response("Couldnt verify", 401)
+    return make_response("Couldn't verify", 401)
 
 
 # Author
-# @app.route("/authors", methods=["GET"])
-# @token_required
-# def get_authors(current_user):
-#     return jsonify({"author": Authors.get_author()})
+@app.route("/author", methods=["GET"])
+@token_required
+def get_authors(current_user):
+    return jsonify({"author": author_controller.get_all_author()})
 
 
-# @app.route("/authors", methods=["POST"])
-# @token_required
-# def add_author(current_user):
-#     data = request.get_json()
-#     Authors.add_author(
-#         current_user.id,
-#         data["author"],
-#         data["phone_number"],
-#         data["email"]
-#     )
-#     return jsonify({"message": "add author successfully"})
+@app.route("/author/<id>", methods=["POST", "GET"])
+@token_required
+def add_author(current_user, id):
+    if request.method == "GET":
+        return author_controller.get_single_author(id)
+    else:
+        return author_controller.create(id)
 
 # @app.route("/authors/<author>/<book>", methods=["DELETE"])
 # @token_required
