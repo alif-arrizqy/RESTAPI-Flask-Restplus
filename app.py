@@ -1,6 +1,3 @@
-from enum import auto
-import json
-from os import stat
 from flask import request, jsonify, make_response
 from functools import wraps
 from werkzeug.security import check_password_hash
@@ -89,19 +86,17 @@ def get_authors(current_user):
     return jsonify({"author": author_controller.get_all_author()})
 
 
-@app.route("/author/<id>", methods=["POST", "GET"])
+@app.route("/author/<id>", methods=["POST", "GET", "PUT", "DELETE"])
 @token_required
 def add_author(current_user, id):
     if request.method == "GET":
         return author_controller.get_single_author(id)
-    else:
+    elif request.method == "POST":
         return author_controller.create(id)
-
-# @app.route("/authors/<author>/<book>", methods=["DELETE"])
-# @token_required
-# def delete_author(author, book):
-#     Authors.delete_author(author, book)
-#     return jsonify({"message": "Author deleted"})
+    elif request.method == "PUT":
+        return author_controller.update(id)
+    elif request.method == "DELETE":
+        return author_controller.delete(id)
 
 
 # Book
