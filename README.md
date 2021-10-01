@@ -24,11 +24,11 @@ pip install -r requirements.txt
 ```
 6. Create database
 
-run python
+- run python in terminal
 ```bash
 python
 ```
-import model
+- import model
 ```bash
 from model.models import db
 ```
