@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash
 import datetime
 import jwt
 from setting import *
-from controller import user_controller, author_controller
+from controller import user_controller, author_controller, book_controller
 from model.models import Users
 
 
@@ -82,13 +82,13 @@ def login_user():
 # Author
 @app.route("/author", methods=["GET"])
 @token_required
-def get_authors(current_user):
+def all_authors(current_user):
     return jsonify({"author": author_controller.get_all_author()})
 
 
 @app.route("/author/<id>", methods=["POST", "GET", "PUT", "DELETE"])
 @token_required
-def add_author(current_user, id):
+def author(current_user, id):
     if request.method == "GET":
         return author_controller.get_single_author(id)
     elif request.method == "POST":
@@ -100,29 +100,23 @@ def add_author(current_user, id):
 
 
 # Book
-# @app.route("/book/<author_id>/<title_book>", methods=["GET"])
-# @token_required
-# def get_book(current_user, author_id, title_book):
-#     return jsonify({"book": Book.get_book()})
-
-# @app.route("/book", methods=["POST"])
-# @token_required
-# def add_book(current_user):
-#     data = request.get_json()
-#     Book.add_book(
-#         data["author_id"],
-#         data["title_book"],
-#         data["country"],
-#         data["publisher"],
-#         data["synopsis"],
-#     )
-#     return jsonify({"message": "add book successfully"})
+@app.route("/book", methods=["GET"])
+@token_required
+def all_book():
+    return jsonify({"book": book_controller.get_all_book()})
 
 
-# @app.before_first_request #Creates everything before the first request.
-# def startup():
-#     db.create_all()
-
+@app.route("/book/<id>", methods=["GET", "POST", "PUT", "DELETE"])
+@token_required
+def book(id):
+    if request.method == "GET":
+        return book_controller.get_single_book(id)
+    elif request.method == "POST":
+        return book_controller.create(id)
+    elif request.method == "PUT":
+        return book_controller.update(id)
+    elif request.method == "DELETE":
+        return book_controller.delete(id)
 
 if __name__ == "__main__":
     app.run(debug=True)
