@@ -72,7 +72,7 @@ def singleTransform(values):
     Get data Users and DetailUsers
     """
     data = {
-        "id": values.id,
+        "id_user": values.id,
         "username": values.username,
         "name": values.name,
         "status": values.status,
@@ -104,6 +104,8 @@ def update(_id):
     try:
         _name = request.json["name"]
         users = Users.query.filter_by(id=_id).first()
+        if not users:
+            return jsonify({"message": "ID is not found"}), 401
         users.name = _name
 
         _address = request.json["address"]
