@@ -102,13 +102,13 @@ def author(current_user, id):
 # Book
 @app.route("/book", methods=["GET"])
 @token_required
-def all_book():
+def all_book(current_user):
     return jsonify({"book": book_controller.get_all_book()})
 
 
 @app.route("/book/<id>", methods=["GET", "POST", "PUT", "DELETE"])
 @token_required
-def book(id):
+def book(current_user, id):
     if request.method == "GET":
         return book_controller.get_single_book(id)
     elif request.method == "POST":
