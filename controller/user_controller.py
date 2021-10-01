@@ -39,7 +39,7 @@ def create():
         db.session.commit()
         return jsonify({"message": "registered successfully!"})
     except Exception as e:
-        print(e)
+        return jsonify({"message": "Duplicate Data username or email, please check again"})
 
 
 def get_all_user():
