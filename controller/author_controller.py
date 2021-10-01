@@ -53,11 +53,15 @@ def singleTransform(values):
     Return value to Author
     """
     data = {
-        "id": values.id,
+        "id_author": values.id,
         "name_author": values.author_name,
         "email": values.email,
         "created_by": createdBy(values.users),
     }
+    book = []
+    for i in values.get_book:
+        book.append({"title_book": i.title_book})
+    data["book"] = book
     return data
 
 
@@ -65,7 +69,7 @@ def createdBy(datas):
     """
     Return name value from Users to Author
     """
-    data = {"name": datas.name}
+    data = [{"name": datas.name}]
     return data
 
 
@@ -76,7 +80,10 @@ def update(_id):
     try:
         _author_name = request.json["author_name"]
         _email = request.json["email"]
+        
         author = Author.query.filter_by(id=_id).first()
+        if not author:
+            return jsonify({"message": "ID is not found"}), 401
         author.author_name = _author_name
         author.email = _email
         db.session.commit()
